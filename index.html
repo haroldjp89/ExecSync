@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="system">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ExecSync · Operational Governance & Action Ledger</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,300..600;1,14..32,300..600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  /* Base Variables - Dark Mode (Default) */
+  :root {
+    --bg-base: #0B0F17;
+    --bg-surface: rgba(21, 27, 38, 0.65);
+    --bg-surface-hover: rgba(30, 39, 54, 0.75);
+    --bg-input: rgba(15, 21, 32, 0.8);
+    --glass-border: rgba(255, 255, 255, 0.08);
+    --glass-border-light: rgba(255, 255, 255, 0.16);
+    --accent-blue: #6366F1;
+    --accent-cyan: #38BDF8;
+    --accent-emerald: #10B981;
+    --accent-amber: #F59E0B;
+    --accent-rose: #F43F5E;
+    --text-main: #F3F4F6;
+    --text-muted: #9CA3AF;
+    --text-dim: #6B7280;
+    --title-gradient: linear-gradient(135deg, #FFFFFF 0%, #9CA3AF 100%);
+    --card-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+    --modal-bg: #111723;
+    --radius: 14px;
+    --radius-sm: 8px;
+    --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
+  }
+
+  /* Light Theme Variables */
+  html[data-theme="light"] {
+    --bg-base: #F8FAFC;
+    --bg-surface: rgba(255, 255, 255, 0.85);
+    --bg-surface-hover: rgba(241, 245, 249, 0.95);
+    --bg-input: #FFFFFF;
+    --glass-border: rgba(0, 0, 0, 0.08);
+    --glass-border-light: rgba(0, 0, 0, 0.15);
+    --accent-blue: #4F46E5;
+    --accent-cyan: #0284C7;
+    --accent-emerald: #059669;
+    --accent-amber: #D97706;
+    --accent-rose: #E11D48;
+    --text-main: #0F172A;
+    --text-muted: #475569;
+    --text-dim: #94A3B8;
+    --title-gradient: linear-gradient(135deg, #0F172A 0%, #475569 100%);
+    --card-shadow: 0 8px 30px rgba(0, 0, 0, 0.06);
+    --modal-bg: #FFFFFF;
+  }
+
+  /* Explicit Dark Theme Variables */
+  html[data-theme="dark"] {
+    --bg-base: #0B0F17;
+    --bg-surface: rgba(21, 27, 38, 0.65);
+    --bg-surface-hover: rgba(30, 39, 54, 0.75);
+    --bg-input: rgba(15, 21, 32, 0.8);
+    --glass-border: rgba(255, 255, 255, 0.08);
+    --glass-border-light: rgba(255, 255, 255, 0.16);
+    --accent-blue: #6366F1;
+    --accent-cyan: #38BDF8;
+    --accent-emerald: #10B981;
+    --accent-amber: #F59E0B;
+    --accent-rose: #F43F5E;
+    --text-main: #F3F4F6;
+    --text-muted: #9CA3AF;
+    --text-dim: #6B7280;
+    --title-gradient: linear-gradient(135deg, #FFFFFF 0%, #9CA3AF 100%);
+    --card-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+    --modal-bg: #111723;
+  }
+
+  /* System theme query fallback */
+  @media (prefers-color-scheme: light) {
+    html[data-theme="system"] {
+      --bg-base: #F8FAFC;
+      --bg-surface: rgba(255, 255, 255, 0.85);
+      --bg-surface-hover: rgba(241, 245, 249, 0.95);
+      --bg-input: #FFFFFF;
+      --glass-border: rgba(0, 0, 0, 0.08);
+      --glass-border-light: rgba(0, 0, 0, 0.15);
+      --accent-blue: #4F46E5;
+      --accent-cyan: #0284C7;
+      --accent-emerald: #059669;
+      --accent-amber: #D97706;
+      --accent-rose: #E11D48;
+      --text-main: #0F172A;
+      --text-muted: #475569;
+      --text-dim: #94A3B8;
+      --title-gradient: linear-gradient(135deg, #0F172A 0%, #475569 100%);
+      --card-shadow: 0 8px 30px rgba(0, 0, 0, 0.06);
+      --modal-bg: #FFFFFF;
+    }
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background-color: var(--bg-base);
+    color: var(--text-main);
+    font-family: var(--font-sans);
+    font-size: 14px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+    padding: 24px 12px;
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+
+  @media (min-width: 640px) { body { padding: 32px 16px; } }
+
+  .container { max-width: 1120px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; }
+
+  /* Glass Cards */
+  .glass-card {
+    background: var(--bg-surface);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius);
+    padding: 18px;
+    position: relative;
+    box-shadow: var(--card-shadow);
+    transition: background 0.3s ease, border-color 0.3s ease;
+  }
+
+  @media (min-width: 640px) { .glass-card { padding: 24px; } }
+
+  .header {
+    display: flex; flex-direction: column; gap: 16px;
+    border-bottom: 1px solid var(--glass-border); padding-bottom: 20px;
+  }
+
+  @media (min-width: 768px) {
+    .header { flex-direction: row; justify-content: space-between; align-items: flex-end; }
+  }
+
+  .header-eyebrow {
+    font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.15em;
+    text-transform: uppercase; color: var(--accent-cyan); margin-bottom: 4px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .header-eyebrow::before {
+    content: ''; width: 6px; height: 6px; border-radius: 50%;
+    background: var(--accent-cyan); box-shadow: 0 0 10px var(--accent-cyan);
+  }
+  .title {
+    font-size: 24px; font-weight: 600; letter-spacing: -0.02em;
+    background: var(--title-gradient); -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  @media (min-width: 640px) { .title { font-size: 28px; } }
+  .subtitle { color: var(--text-muted); font-size: 13px; margin-top: 4px; }
+
+  /* Metrics Grid */
+  .metrics-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; }
+  .metric-card {
+    background: var(--bg-surface); backdrop-filter: blur(12px);
+    border: 1px solid var(--glass-border); border-radius: var(--radius);
+    padding: 14px 16px; display: flex; flex-direction: column; gap: 4px;
+    box-shadow: var(--card-shadow);
+  }
+  .metric-label { font-size: 11px; color: var(--text-muted); }
+  .metric-value { font-size: 24px; font-weight: 600; font-family: var(--font-mono); color: var(--text-main); }
+
+  /* Form & Inputs */
+  .form-grid { display: grid; grid-template-columns: 1fr; gap: 14px; margin-top: 14px; }
+  @media (min-width: 640px) {
+    .form-grid { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
+    .full-width { grid-column: 1 / -1; }
+  }
+
+  label { display: block; font-size: 12px; font-weight: 500; color: var(--text-muted); margin-bottom: 6px; }
+  input, select, textarea {
+    width: 100%; background: var(--bg-input); border: 1px solid var(--glass-border);
+    border-radius: var(--radius-sm); padding: 10px 12px; color: var(--text-main);
+    font-family: var(--font-sans); font-size: 13px; outline: none;
+    transition: all 0.2s ease;
+  }
+  input:focus, select:focus, textarea:focus {
+    border-color: var(--accent-blue); box-shadow: 0 0 12px rgba(99, 102, 241, 0.25);
+  }
+
+  /* Buttons */
+  .btn-group { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .btn {
+    background: rgba(125, 125, 125, 0.08); border: 1px solid var(--glass-border);
+    color: var(--text-main); padding: 8px 14px; border-radius: var(--radius-sm);
+    font-size: 12px; font-weight: 500; cursor: pointer; display: inline-flex;
+    align-items: center; gap: 6px; transition: all 0.2s ease; text-decoration: none;
+  }
+  .btn:hover { background: rgba(125, 125, 125, 0.16); border-color: var(--glass-border-light); }
+  .btn-primary {
+    background: linear-gradient(135deg, var(--accent-blue) 0%, #4338CA 100%);
+    color: #FFFFFF !important; border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 4px 14px rgba(79, 70, 229, 0.35);
+  }
+  .btn-sm { padding: 4px 8px; font-size: 11px; }
+
+  /* Table & Badges */
+  .table-wrap { overflow-x: auto; margin-top: 12px; -webkit-overflow-scrolling: touch; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 600px; }
+  th {
+    text-align: left; padding: 10px 12px; font-size: 11px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-dim);
+    border-bottom: 1px solid var(--glass-border);
+  }
+  td { padding: 14px 12px; border-bottom: 1px solid var(--glass-border); vertical-align: top; }
+  tr:hover td { background: var(--bg-surface-hover); }
+
+  .badge { display: inline-flex; padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 500; }
+  .badge-decided { background: rgba(16, 185, 129, 0.15); color: var(--accent-emerald); border: 1px solid rgba(16, 185, 129, 0.3); }
+  .badge-progress { background: rgba(245, 158, 11, 0.15); color: var(--accent-amber); border: 1px solid rgba(245, 158, 11, 0.3); }
+  .badge-blocked { background: rgba(244, 63, 94, 0.15); color: var(--accent-rose); border: 1px solid rgba(244, 63, 94, 0.3); }
+  .tag { background: rgba(125, 125, 125, 0.1); color: var(--text-muted); padding: 2px 6px; border-radius: 4px; font-family: var(--font-mono); font-size: 10px; }
+
+  /* Modal */
+  .modal-overlay {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(8px);
+    display: flex; justify-content: center; align-items: center; padding: 16px;
+    opacity: 0; pointer-events: none; transition: opacity 0.25s ease; z-index: 200;
+  }
+  .modal-overlay.active { opacity: 1; pointer-events: auto; }
+  .modal {
+    background: var(--modal-bg); border: 1px solid var(--glass-border-light);
+    border-radius: var(--radius); padding: 24px; max-width: 540px; width: 100%;
+    box-shadow: var(--card-shadow); max-height: 90vh; overflow-y: auto;
+  }
+
+  .toast {
+    position: fixed; bottom: 20px; right: 20px; background: var(--accent-emerald); color: #FFFFFF;
+    padding: 10px 18px; border-radius: var(--radius-sm); font-weight: 600; font-size: 12px;
+    box-shadow: 0 10px 25px rgba(16, 185, 129, 0.4); opacity: 0; transform: translateY(20px);
+    transition: all 0.3s ease; pointer-events: none; z-index: 300;
+  }
+  .toast.show { opacity: 1; transform: translateY(0); }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <header class="header">
+    <div>
+      <div class="header-eyebrow">Operational Governance & Action Ledger</div>
+      <h1 class="title">ExecSync</h1>
+      <p class="subtitle">Single-file meeting governance tool & action tracker with 1-click email follow-ups.</p>
+    </div>
+    <div class="btn-group">
+      <button class="btn" id="themeBtn" title="Toggle Theme">🖥️ System</button>
+      <button class="btn" id="samplesBtn">↻ Samples</button>
+      <button class="btn btn-primary" id="sendSummaryBtn">✉️ Send Board Summary</button>
+    </div>
+  </header>
+
+  <section class="metrics-grid">
+    <div class="metric-card">
+      <span class="metric-label">Logged Decisions</span>
+      <span class="metric-value" id="m-total">0</span>
+    </div>
+    <div class="metric-card">
+      <span class="metric-label">Executing</span>
+      <span class="metric-value" id="m-decided" style="color: var(--accent-emerald)">0</span>
+    </div>
+    <div class="metric-card">
+      <span class="metric-label">Blockers</span>
+      <span class="metric-value" id="m-blocked" style="color: var(--accent-rose)">0</span>
+    </div>
+  </section>
+
+  <section class="glass-card">
+    <h3 style="font-size: 15px; font-weight: 600;">Log New Executive Decision / Blocker</h3>
+    <form id="decisionForm" onsubmit="return false;">
+      <div class="form-grid">
+        <div class="full-width">
+          <label>Decision Title / Context</label>
+          <input type="text" id="f-title" placeholder="e.g., Approve Commslayer Live Workload Engine Deployment" required>
+        </div>
+        <div>
+          <label>Impact Area</label>
+          <select id="f-area">
+            <option value="Strategy">Strategy</option>
+            <option value="Logistics/3PL">Logistics / 3PL</option>
+            <option value="AI & Automation">AI & Automation</option>
+            <option value="Customer Experience">Customer Experience</option>
+            <option value="Product & Pricing">Product & Pricing</option>
+            <option value="Finance & Legal">Finance & Legal</option>
+          </select>
+        </div>
+        <div>
+          <label>Executive Owner</label>
+          <input type="text" id="f-owner" placeholder="e.g., Harold Castro" required>
+        </div>
+        <div>
+          <label>Governance Status</label>
+          <select id="f-status">
+            <option value="Decided">Decided</option>
+            <option value="In Progress">In Progress</option>
+            <option value="Blocked">Blocked</option>
+          </select>
+        </div>
+        <div class="full-width">
+          <label>Strategic Rationale / Blocker Notes</label>
+          <textarea id="f-notes" rows="2" placeholder="Key trade-offs or specific blocker dependencies..."></textarea>
+        </div>
+      </div>
+      <div style="margin-top: 14px; text-align: right;">
+        <button type="button" class="btn btn-primary" id="recordDecisionBtn">+ Record Decision</button>
+      </div>
+    </form>
+  </section>
+
+  <section class="glass-card">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 8px;">
+      <h3 style="font-size: 15px; font-weight: 600;">Active Governance Ledger</h3>
+      <input type="text" id="tableFilter" placeholder="Filter decisions..." style="width: 180px;">
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Area</th>
+            <th>Decision & Notes</th>
+            <th>Owner</th>
+            <th>Status</th>
+            <th style="text-align: right;">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="logBody"></tbody>
+      </table>
+    </div>
+  </section>
+</div>
+
+<!-- Edit Modal Overlay -->
+<div class="modal-overlay" id="editModal">
+  <div class="modal">
+    <h3 style="font-size: 16px; margin-bottom: 14px;">Edit Governance Entry</h3>
+    <form id="editForm" onsubmit="return false;">
+      <input type="hidden" id="e-id">
+      <div style="display: grid; gap: 10px;">
+        <div>
+          <label>Title</label>
+          <input type="text" id="e-title" required>
+        </div>
+        <div>
+          <label>Area</label>
+          <select id="e-area">
+            <option value="Strategy">Strategy</option>
+            <option value="Logistics/3PL">Logistics / 3PL</option>
+            <option value="AI & Automation">AI & Automation</option>
+            <option value="Customer Experience">Customer Experience</option>
+            <option value="Product & Pricing">Product & Pricing</option>
+            <option value="Finance & Legal">Finance & Legal</option>
+          </select>
+        </div>
+        <div>
+          <label>Owner</label>
+          <input type="text" id="e-owner" required>
+        </div>
+        <div>
+          <label>Status</label>
+          <select id="e-status">
+            <option value="Decided">Decided</option>
+            <option value="In Progress">In Progress</option>
+            <option value="Blocked">Blocked</option>
+          </select>
+        </div>
+        <div>
+          <label>Notes</label>
+          <textarea id="e-notes" rows="2"></textarea>
+        </div>
+      </div>
+      <div style="margin-top: 16px; text-align: right; display: flex; gap: 8px; justify-content: flex-end;">
+        <button type="button" class="btn" id="cancelEditBtn">Cancel</button>
+        <button type="button" class="btn btn-primary" id="saveEditBtn">Save Changes</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Draft & Email Modal Overlay -->
+<div class="modal-overlay" id="draftModal">
+  <div class="modal">
+    <h3 style="font-size: 16px; margin-bottom: 6px;" id="d-title">✉️ Draft Ready</h3>
+    <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 12px;">Draft text has been copied to your clipboard. Choose a dispatch method below:</p>
+    
+    <div style="display: grid; gap: 10px; margin-bottom: 16px;">
+      <div>
+        <label>Subject</label>
+        <input type="text" id="d-subject" readonly>
+      </div>
+      <div>
+        <label>Body</label>
+        <textarea id="d-body" rows="6" readonly style="font-family: var(--font-mono); font-size: 12px;"></textarea>
+      </div>
+    </div>
+
+    <div style="display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; align-items: center;">
+      <button class="btn" onclick="window.closeDraftModal()">Close</button>
+      <a class="btn" id="d-gmail" target="_blank" rel="noopener">Gmail Web ↗</a>
+      <a class="btn" id="d-outlook" target="_blank" rel="noopener">Outlook Web ↗</a>
+      <a class="btn btn-primary" id="d-mailapp" target="_top" rel="noopener">Open Mail App ↗</a>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast">Copied to Clipboard!</div>
+
+<script>
+  // Global scope variables & functions guaranteed for Google Apps Script execution
+  window.logs = [];
+  window.currentTheme = 'system';
+
+  function safeGet(key) {
+    try { return localStorage.getItem(key); } catch (e) { return null; }
+  }
+
+  function safeSet(key, val) {
+    try { localStorage.setItem(key, val); } catch (e) {}
+  }
+
+  window.applyTheme = function(theme) {
+    window.currentTheme = theme;
+    safeSet('exec_theme_v7', theme);
+    document.documentElement.setAttribute('data-theme', theme);
+    const btn = document.getElementById('themeBtn');
+    if (btn) {
+      if (theme === 'system') btn.textContent = '🖥️ System';
+      else if (theme === 'dark') btn.textContent = '🌙 Dark';
+      else btn.textContent = '☀️ Light';
+    }
+  };
+
+  window.toggleTheme = function() {
+    if (window.currentTheme === 'system') window.applyTheme('dark');
+    else if (window.currentTheme === 'dark') window.applyTheme('light');
+    else window.applyTheme('system');
+  };
+
+  window.handleSave = function(e) {
+    if (e && e.preventDefault) e.preventDefault();
+    const titleEl = document.getElementById('f-title');
+    const ownerEl = document.getElementById('f-owner');
+    
+    if (!titleEl || !ownerEl) return false;
+    
+    const titleVal = titleEl.value.trim();
+    const ownerVal = ownerEl.value.trim();
+    
+    if (!titleVal) { titleEl.focus(); return false; }
+    if (!ownerVal) { ownerEl.focus(); return false; }
+
+    window.logs.unshift({
+      id: Date.now(),
+      date: new Date().toISOString().split('T')[0],
+      title: titleVal,
+      area: document.getElementById('f-area').value,
+      owner: ownerVal,
+      status: document.getElementById('f-status').value,
+      notes: document.getElementById('f-notes').value.trim()
+    });
+    
+    window.saveAndRender();
+    document.getElementById('decisionForm').reset();
+    return false;
+  };
+
+  window.openEditModal = function(id) {
+    const item = window.logs.find(i => i.id === id);
+    if (!item) return;
+    document.getElementById('e-id').value = item.id;
+    document.getElementById('e-title').value = item.title;
+    document.getElementById('e-area').value = item.area;
+    document.getElementById('e-owner').value = item.owner;
+    document.getElementById('e-status').value = item.status;
+    document.getElementById('e-notes').value = item.notes || '';
+    document.getElementById('editModal').classList.add('active');
+  };
+
+  window.closeEditModal = function() {
+    document.getElementById('editModal').classList.remove('active');
+  };
+
+  window.saveEdit = function(e) {
+    if (e && e.preventDefault) e.preventDefault();
+    const id = Number(document.getElementById('e-id').value);
+    const index = window.logs.findIndex(i => i.id === id);
+    if (index !== -1) {
+      window.logs[index].title = document.getElementById('e-title').value.trim();
+      window.logs[index].area = document.getElementById('e-area').value;
+      window.logs[index].owner = document.getElementById('e-owner').value.trim();
+      window.logs[index].status = document.getElementById('e-status').value;
+      window.logs[index].notes = document.getElementById('e-notes').value.trim();
+      window.saveAndRender();
+    }
+    window.closeEditModal();
+    return false;
+  };
+
+  window.showDraftModal = function(title, subject, body) {
+    document.getElementById('d-title').textContent = title;
+    document.getElementById('d-subject').value = subject;
+    document.getElementById('d-body').value = body;
+
+    const encSub = encodeURIComponent(subject);
+    const encBody = encodeURIComponent(body);
+
+    document.getElementById('d-mailapp').href = `mailto:?subject=${encSub}&body=${encBody}`;
+    document.getElementById('d-gmail').href = `https://mail.google.com/mail/?view=cm&fs=1&tf=1&su=${encSub}&body=${encBody}`;
+    document.getElementById('d-outlook').href = `https://outlook.live.com/mail/0/deeplink/compose?subject=${encSub}&body=${encBody}`;
+
+    window.fallbackCopyText(`Subject: ${subject}\n\n${body}`);
+    document.getElementById('draftModal').classList.add('active');
+  };
+
+  window.closeDraftModal = function() {
+    document.getElementById('draftModal').classList.remove('active');
+  };
+
+  window.sendEmailFollowup = function(id) {
+    const i = window.logs.find(item => item.id === id);
+    if (!i) return;
+
+    const subjectText = `[Executive Follow-Up] ${i.status.toUpperCase()}: ${i.title}`;
+    const bodyText = 
+      `Hi ${i.owner},\n\nFollowing up on our recent meeting decision:\n\n` +
+      `• Decision: ${i.title}\n` +
+      `• Area: ${i.area}\n` +
+      `• Current Status: ${i.status}\n` +
+      `• Rationale/Notes: ${i.notes || 'N/A'}\n\n` +
+      `Please let me know if there are any blockers holding up execution.\n\nBest regards,\n[Your Name]`;
+
+    window.showDraftModal("✉️ Follow-Up Draft Ready", subjectText, bodyText);
+  };
+
+  window.exportBoardSummary = function() {
+    if (window.logs.length === 0) return alert('Log at least one decision first!');
+    const subjectText = `Executive Alignment & Decision Summary (${new Date().toLocaleDateString()})`;
+    let bodyText = `Executive Decision Log Summary - ${new Date().toLocaleDateString()}\n\n`;
+    window.logs.forEach(i => {
+      bodyText += `[${i.status.toUpperCase()}] ${i.title}\nArea: ${i.area} | Owner: ${i.owner}\nNotes: ${i.notes || 'N/A'}\n\n`;
+    });
+    bodyText += `Best regards,\n[Your Name]`;
+
+    window.showDraftModal("✉️ Board Summary Ready", subjectText, bodyText);
+  };
+
+  window.fallbackCopyText = function(text) {
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(text).then(() => window.showToast('Copied draft to clipboard!')).catch(() => window.copyViaTextarea(text));
+    } else {
+      window.copyViaTextarea(text);
+    }
+  };
+
+  window.copyViaTextarea = function(text) {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed'; ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.focus(); ta.select();
+    try { document.execCommand('copy'); window.showToast('Copied draft to clipboard!'); } catch (err) {}
+    document.body.removeChild(ta);
+  };
+
+  window.deleteItem = function(id) {
+    window.logs = window.logs.filter(i => i.id !== id);
+    window.saveAndRender();
+  };
+
+  window.saveAndRender = function() {
+    safeSet('exec_decisions_v7', JSON.stringify(window.logs));
+    window.renderTable();
+    window.renderMetrics();
+  };
+
+  window.renderMetrics = function() {
+    document.getElementById('m-total').textContent = window.logs.length;
+    document.getElementById('m-decided').textContent = window.logs.filter(i => i.status === 'Decided').length;
+    document.getElementById('m-blocked').textContent = window.logs.filter(i => i.status === 'Blocked').length;
+  };
+
+  window.renderTable = function() {
+    const filterEl = document.getElementById('tableFilter');
+    const q = filterEl ? filterEl.value.toLowerCase() : '';
+    const filtered = window.logs.filter(i => i.title.toLowerCase().includes(q) || i.owner.toLowerCase().includes(q) || i.area.toLowerCase().includes(q));
+    const tbody = document.getElementById('logBody');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+
+    if (filtered.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-dim); padding: 24px;">No decisions logged yet. Click "Samples" above to prefill.</td></tr>`;
+      return;
+    }
+
+    filtered.forEach(i => {
+      const tr = document.createElement('tr');
+      const badgeClass = i.status === 'Decided' ? 'badge-decided' : i.status === 'Blocked' ? 'badge-blocked' : 'badge-progress';
+      tr.innerHTML = `
+        <td style="font-family: var(--font-mono); font-size: 11px; color: var(--text-dim);">${i.date}</td>
+        <td><span class="tag">${i.area}</span></td>
+        <td>
+          <div style="font-weight: 500; color: var(--text-main);">${i.title}</div>
+          ${i.notes ? `<div style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">${i.notes}</div>` : ''}
+        </td>
+        <td style="color: var(--text-muted); font-size: 12px;">${i.owner}</td>
+        <td><span class="badge ${badgeClass}">${i.status}</span></td>
+        <td style="text-align: right;">
+          <div style="display: flex; gap: 4px; justify-content: flex-end;">
+            <button type="button" class="btn btn-sm" onclick="window.sendEmailFollowup(${i.id})" title="Send Email Follow-Up">✉️</button>
+            <button type="button" class="btn btn-sm" onclick="window.openEditModal(${i.id})" title="Edit Entry">✏️</button>
+            <button type="button" class="btn btn-sm" onclick="window.deleteItem(${i.id})" title="Delete">✕</button>
+          </div>
+        </td>
+      `;
+      tbody.appendChild(tr);
+    });
+  };
+
+  window.showToast = function(msg = 'Copied to Clipboard!') {
+    const t = document.getElementById('toast');
+    if (!t) return;
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 3000);
+  };
+
+  window.seedSampleData = function() {
+    window.logs = [
+      { id: 1, date: '2026-11-08', area: 'Logistics/3PL', title: 'Restructure UK Reverse Logistics Framework', owner: 'Harold Castro', status: 'Decided', notes: 'Enforce MOCRA/UK Laws; redirect unsealed returns to Toiletries Amnesty ESG channels.' },
+      { id: 2, date: '2026-11-05', area: 'Product & Pricing', title: 'Formulate "Sheer" Day Balm SKU Expansion', owner: 'C-Suite / R&D', status: 'In Progress', notes: 'Targeting carotenoid staining issue driving 16.7% negative reviews.' },
+      { id: 3, date: '2026-11-02', area: 'AI & Automation', title: 'Commslayer Live Workload Triage Engine', owner: 'Harold Castro', status: 'Decided', notes: 'Deployed Google Apps Script web app with concurrency locking for shift lead ticket batching.' }
+    ];
+    window.saveAndRender();
+  };
+
+  // Explicit window load initialization
+  window.onload = function() {
+    try {
+      const raw = safeGet('exec_decisions_v7');
+      window.logs = raw ? JSON.parse(raw) : [];
+    } catch (e) { window.logs = []; }
+
+    window.currentTheme = safeGet('exec_theme_v7') || 'system';
+    window.applyTheme(window.currentTheme);
+
+    document.getElementById('themeBtn')?.addEventListener('click', window.toggleTheme);
+    document.getElementById('samplesBtn')?.addEventListener('click', window.seedSampleData);
+    document.getElementById('sendSummaryBtn')?.addEventListener('click', window.exportBoardSummary);
+    document.getElementById('recordDecisionBtn')?.addEventListener('click', window.handleSave);
+    document.getElementById('cancelEditBtn')?.addEventListener('click', window.closeEditModal);
+    document.getElementById('saveEditBtn')?.addEventListener('click', window.saveEdit);
+    document.getElementById('tableFilter')?.addEventListener('keyup', window.renderTable);
+
+    window.saveAndRender();
+  };
+</script>
+</body>
+</html>
